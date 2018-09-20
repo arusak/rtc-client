@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": [
+      "es2017",
+      "dom"
+    ],
+    "skipLibCheck": true,
+    "removeComments": true
+  },
+  "compileOnSave": false,
+  "buildOnSave": false,
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "src/test.ts",
+    "src/test-utils.ts",
+    "src/apps/**/main.aot.ts",
+    "src/**/*.spec.ts"
+  ],
+  "awesomeTypescriptLoaderOptions": {
+    "forkChecker": true,
+    "useWebpackText": true
+  }
+}

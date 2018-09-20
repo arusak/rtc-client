@@ -1,0 +1,54 @@
+video {
+  border: thin dotted #ccc;
+
+  &.local {
+    max-height: 10rem;
+  }
+
+  &.remote {
+    max-height: 25rem;
+  }
+}
+
+.username {
+  padding: 0.25rem;
+  background: #333333;
+  color: beige;
+}
+
+.connect-container {
+  padding: 0.25rem;
+}
+
+.loader {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  background: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  border-radius: 50%;
+  width: 3em;
+  height: 3em;
+  border: 0.5em solid rgba(0, 0, 0, 0.2);
+  border-top-color: rgba(0, 0, 0, 0.5);
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
