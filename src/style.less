@@ -1,12 +1,21 @@
+.video-container {
+  position: relative;
+  display: inline-block;
+}
+
 video {
   border: thin dotted #ccc;
+  border-radius: 3px;
 
   &.local {
-    max-height: 10rem;
+    max-height: 6rem;
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
   }
 
   &.remote {
-    max-height: 25rem;
+    max-height: 16rem;
   }
 }
 

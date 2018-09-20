@@ -11,4 +11,6 @@ export class PatientApp extends BaseApp {
             url: '/api/patient/login', username: 'slukov', password: 'slukov'
         };
     }
+
+
 }

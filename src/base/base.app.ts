@@ -1,6 +1,7 @@
 import {VideoConnector} from './video-connector.interface';
 import {View} from './view.interface';
 import {LoginSession} from '../shared/login-session';
+import {ChatConnection} from '../shared/chat.connection';
 
 export abstract class BaseApp {
     appointmentIdInput: HTMLInputElement;
@@ -13,11 +14,12 @@ export abstract class BaseApp {
     protected videoConnector: VideoConnector;
     protected VideoConnectorClass: new(videoSocketId: string) => VideoConnector;
     protected view: View;
-    protected ViewClass: new(videoConnector: VideoConnector) => View;
+    protected ViewClass: new(videoConnector: VideoConnector, chatConnection: ChatConnection) => View;
 
     protected authParameters: { url: string, username: string, password: string };
 
     protected session: LoginSession;
+    private chatConnection: ChatConnection;
 
     protected constructor() {
         this.connectContainer = document.querySelector('.connect-container');
@@ -72,12 +74,14 @@ export abstract class BaseApp {
             .then(r => r.json())
             .then((appointment: any) => {
                 let videoSocketId = appointment.videoSession.id;
+                let chatSocketId = appointment.chatSession.id;
                 this.videoConnector = new this.VideoConnectorClass(videoSocketId);
+                this.chatConnection = new ChatConnection(chatSocketId);
             });
     };
 
     private renderView() {
-        this.view = new this.ViewClass(this.videoConnector);
+        this.view = new this.ViewClass(this.videoConnector, this.chatConnection);
         this.view.render(this.rootElement);
     };
 

@@ -2,7 +2,7 @@ import {BaseView} from '../base/base.view';
 
 export class DoctorView extends BaseView {
     private callButton: HTMLButtonElement;
-    private hangupButton: HTMLButtonElement;
+    private cancelButton: HTMLButtonElement;
 
     render(root: HTMLElement) {
         this.callButton = document.createElement('button');
@@ -11,12 +11,29 @@ export class DoctorView extends BaseView {
             this.videoConnector.call();
         });
 
-        this.hangupButton = document.createElement('button');
-        this.hangupButton.innerText = 'Hang up';
-        this.hangupButton.addEventListener('click', () => {
-            this.videoConnector.hangup();
+        this.cancelButton = document.createElement('button');
+        this.cancelButton.innerText = 'Cancel';
+        this.disable(this.cancelButton);
+        this.cancelButton.addEventListener('click', () => {
+            this.videoConnector.cancel();
         });
 
-        super.render(root, 'Doctor', 'doctor', [this.callButton, this.hangupButton]);
+        super.render(root, 'Doctor', 'doctor', [this.callButton, this.cancelButton]);
+    }
+
+    protected subscribeToStreams(): void {
+        super.subscribeToStreams();
+        this.videoConnector.remoteStream$
+            .subscribe(() => {
+                this.disable(this.callButton);
+                this.disable(this.cancelButton);
+                this.enable(this.hangupButton);
+            });
+
+        this.videoConnector.connectionClosed$.subscribe(() => {
+            this.enable(this.callButton);
+            this.enable(this.cancelButton);
+            this.disable(this.hangupButton);
+        });
     }
 }

@@ -1,12 +1,10 @@
-import {BehaviorSubject, from, Observable} from "rxjs";
-import {SignalConnection} from "./signal.connection";
-import {SignalMessage} from "./webrtc-signal-message.model";
-import {filter, flatMap, map} from "rxjs/operators";
+import {BehaviorSubject, from, Observable} from 'rxjs';
+import {SignalConnection} from './signal.connection';
+import {SignalMessage} from './webrtc-signal-message.model';
+import {filter, flatMap, map} from 'rxjs/operators';
 
 export class VideoConnection {
     remoteStream$: Observable<MediaStream>;
-
-    remoteStream = () => this.remoteStreamSubj.value;
 
     private pc: RTCPeerConnection;
     private remoteStreamSubj: BehaviorSubject<MediaStream>;
@@ -21,14 +19,19 @@ export class VideoConnection {
         this.init();
     }
 
+    get remoteStream() {
+        return this.remoteStreamSubj.value;
+    }
+
     init() {
-        console.log('Listening to addstream event');
+        // todo addstream is depecated, use `track` event
+        console.log('Listening to `addstream` event');
         this.pc.addEventListener('addstream', (evt: MediaStreamEvent) => {
             console.log('Got a remote stream', evt.stream.getVideoTracks());
             this.remoteStreamSubj.next(evt.stream);
         });
 
-        console.log('Listening to icecandidate event');
+        console.log('Listening to `icecandidate` event');
         this.pc.addEventListener('icecandidate', (evt: RTCPeerConnectionIceEvent) => {
             if (evt.candidate) {
                 console.log('STUN generated a local candidate. Sending it.');
@@ -36,10 +39,11 @@ export class VideoConnection {
             }
         });
 
-        console.log('Listening to negotiationneeded event');
-        this.pc.addEventListener('negotiationneeded', () => {
-            console.log('Negotiation needed. Doing nothing.');
-        });
+        /* not needed because we won't create offer */
+        // console.log('Listening to negotiationneeded event');
+        // this.pc.addEventListener('negotiationneeded', () => {
+        //     console.log('Negotiation needed. Doing nothing.');
+        // });
 
         console.log('Waiting for remote candidates');
         this.signalSocket.candidate$.subscribe(msg => {
@@ -76,6 +80,11 @@ export class VideoConnection {
                 this.signalSocket.sendAnswer(desc.sdp);
             },
         );
+    }
+
+    close() {
+        this.pc.close();
+        this.remoteStreamSubj.complete();
     }
 }
 

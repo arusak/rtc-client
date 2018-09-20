@@ -1,7 +1,7 @@
-import {interval, Observable, Subject} from "rxjs";
-import {SignalMessage} from "./webrtc-signal-message.model";
-import {WebSocketConnection} from "./web-socket-connection.class";
-import {filter, share, takeUntil, map} from "rxjs/operators";
+import {interval, Observable, Subject} from 'rxjs';
+import {SignalMessage} from './webrtc-signal-message.model';
+import {WebSocketConnection} from './web-socket-connection.class';
+import {filter, map, share, shareReplay, takeUntil, tap} from 'rxjs/operators';
 
 export class SignalConnection {
     offer$: Observable<SignalMessage>;
@@ -17,12 +17,15 @@ export class SignalConnection {
         this.socketConnection.connect(`ws/video/${socketId}`);
 
         let data$: Observable<SignalMessage> = this.socketConnection.data$
-            .pipe(map((evt: MessageEvent) => {
-                let data = JSON.parse(evt.data);
-                return new SignalMessage(data);
-            }), share());
+            .pipe(
+                map((evt: MessageEvent) => JSON.parse(evt.data)),
+                tap(data => console.log('SIGNAL: ' + data.type)),
+                map(data => new SignalMessage(data)),
+                share()
+            );
 
-        this.offer$ = data$.pipe(filter(msg => msg.type === 'offer'));
+        // todo not sure if shareReplay is correct, but it works
+        this.offer$ = data$.pipe(filter(msg => msg.type === 'offer'), shareReplay());
         this.candidate$ = data$.pipe(filter(msg => msg.type === 'candidate'));
         this.hangup$ = data$.pipe(filter(msg => msg.type === 'hangup'));
         this.error$ = data$.pipe(filter(msg => msg.type === 'error'));
@@ -54,7 +57,7 @@ export class SignalConnection {
     private setupPing() {
         this.stopPing$ = new Subject();
 
-        interval(10000)
+        interval(30000)
             .pipe(takeUntil(this.stopPing$))
             .subscribe(() => this.socketConnection.send({type: 'ping'}));
     }

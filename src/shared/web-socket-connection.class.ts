@@ -48,7 +48,6 @@ export class WebSocketConnection {
         };
 
         this.ws.onmessage = msg => {
-            this.log('>>>', msg);
             this.observer.next(msg);
         };
 

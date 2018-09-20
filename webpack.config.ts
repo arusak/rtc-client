@@ -62,7 +62,7 @@ module.exports = {
         publicPath: 'http://localhost:3000/',
         historyApiFallback: true,
         stats: 'normal',
-        port: 3000,
+        port: 3001,
         host: 'localhost',
         overlay: true,
         proxy: {
