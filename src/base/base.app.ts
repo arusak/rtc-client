@@ -42,6 +42,8 @@ export abstract class BaseApp {
 
                 let usernameEl: HTMLElement = document.querySelector('.username');
                 usernameEl.innerText = `Logged in as ${this.authParameters.username}`;
+
+                this.connect();
             } else {
                 this.errorContainer.style.display = 'block';
                 this.errorContainer.innerText = 'Authentication failed.'
@@ -50,7 +52,7 @@ export abstract class BaseApp {
 
         this.startButton.addEventListener('click', () => {
             this.connect();
-        })
+        });
     }
 
     private connect() {

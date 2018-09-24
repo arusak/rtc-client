@@ -2,6 +2,7 @@ import {WebSocketConnection} from './web-socket-connection.class';
 import {Observable} from 'rxjs';
 import {filter, map, share, tap} from 'rxjs/operators';
 import {ChatMessage} from './chat-message.model';
+import * as moment from 'moment';
 
 export class ChatConnection {
     call$: Observable<any>;
@@ -24,14 +25,14 @@ export class ChatConnection {
     private setupChannels() {
         const data$ = this.socketConnection.data$
             .pipe(
-                map(msgEvt => JSON.parse(msgEvt.data)),
-                tap((msg: ChatMessage) => console.log('CHAT: ' + msg.type)),
+                map(msgEvt => new ChatMessage(JSON.parse(msgEvt.data))),
+                filter((msg: ChatMessage) => msg.timestamp.isAfter(moment())),
+                tap((msg: ChatMessage) => console.log(`CHAT: ${msg.type} ${msg.timestamp} ${moment()}`)),
                 share());
 
         this.call$ = data$.pipe(filter(msg => msg.type === 'VIDEO_CALL_STARTED'));
-        this.ended$ = data$.pipe(filter(msg => ['VIDEO_CALL_CANCELLED', 'VIDEO_CALL_IGNORED', 'VIDEO_CALL_DECLINED'].includes(msg.type)));
+        this.ended$ = data$.pipe(filter(msg => ['VIDEO_CALL_CANCELLED', 'VIDEO_CALL_IGNORED', 'VIDEO_CALL_DECLINED', 'VIDEO_CALL_ENDED'].includes(msg.type)));
         this.accepted$ = data$.pipe(filter(msg => ['VIDEO_CALL_ACCEPTED'].includes(msg.type)));
-
     }
 
     close() {
