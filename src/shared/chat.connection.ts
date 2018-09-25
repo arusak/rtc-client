@@ -23,11 +23,12 @@ export class ChatConnection {
     }
 
     private setupChannels() {
+        let start = moment();
         const data$ = this.socketConnection.data$
             .pipe(
                 map(msgEvt => new ChatMessage(JSON.parse(msgEvt.data))),
-                filter((msg: ChatMessage) => msg.timestamp.isAfter(moment())),
-                tap((msg: ChatMessage) => console.log(`CHAT: ${msg.type} ${msg.timestamp} ${moment()}`)),
+                filter((msg: ChatMessage) => msg.timestamp.isAfter(start)),
+                tap((msg: ChatMessage) => console.log(`CHAT: ${msg.type}`)),
                 share());
 
         this.call$ = data$.pipe(filter(msg => msg.type === 'VIDEO_CALL_STARTED'));

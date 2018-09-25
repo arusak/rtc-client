@@ -3,26 +3,27 @@ import {VideoConnection} from '../shared/video.connection';
 import {SignalConnection} from '../shared/signal.connection';
 import {VideoConnector} from './video-connector.interface';
 import {flatMap, take} from 'rxjs/operators';
+import {ChatConnection} from '../shared/chat.connection';
 
 export abstract class BaseVideoConnector implements VideoConnector {
     remoteStream$: Observable<MediaStream>;
     localStream$: Observable<MediaStream>;
-    connectionClosed$: Observable<any>;
+    terminated$: Observable<any>;
 
     protected localStreamSubj: Subject<MediaStream>;
     protected remoteStreamSubj: Subject<MediaStream>;
-    protected connectionClosedSubj: Subject<MediaStream>;
+    protected terminatedSubj: Subject<MediaStream>;
 
     protected videoConnection: VideoConnection;
     protected signalSocket: SignalConnection;
 
-    protected constructor(protected signalSocketId: string) {
+    constructor(protected signalSocketId: string, protected chatConnection: ChatConnection) {
         this.localStreamSubj = new Subject<MediaStream>();
         this.localStream$ = this.localStreamSubj.asObservable();
         this.remoteStreamSubj = new Subject<MediaStream>();
         this.remoteStream$ = this.remoteStreamSubj.asObservable();
-        this.connectionClosedSubj = new Subject<MediaStream>();
-        this.connectionClosed$ = this.connectionClosedSubj.asObservable();
+        this.terminatedSubj = new Subject<MediaStream>();
+        this.terminated$ = this.terminatedSubj.asObservable();
     }
 
     /**
@@ -55,13 +56,13 @@ export abstract class BaseVideoConnector implements VideoConnector {
     private initializeSignalSocket() {
         console.log('Initializing a signal socket');
         this.signalSocket = new SignalConnection(this.signalSocketId);
-        this.signalSocket.hangup$
+        this.chatConnection.ended$
             .pipe(take(1))
             .subscribe(() => {
                 console.log('Closing connections');
                 this.signalSocket.close();
                 this.videoConnection.close();
-                this.connectionClosedSubj.next();
+                this.terminatedSubj.next();
             });
         this.signalSocket.error$.subscribe(console.error);
     }

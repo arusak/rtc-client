@@ -29,19 +29,21 @@ export class WebSocketConnection {
         this.ws.close();
     }
 
-    connect(url: string) {
+    connect(url: string):Promise<any> {
         this.url = url;
 
         this.log(`Соединяемся...`);
         this.ws = new WebSocket(`ws://localhost:8080/${this.url}`);
 
-        this.ws.onopen = () => {
-            this.log('Вебсокет открыт');
+        let promise = new Promise(resolve => {
+            this.ws.onopen = () => {
+                this.log('Вебсокет открыт');
 
-            while (this.sendBuffer.length > 0) {
-                this.send(this.sendBuffer.shift());
-            }
-        };
+                while (this.sendBuffer.length > 0) {
+                    this.send(this.sendBuffer.shift());
+                }
+            };
+        });
 
         this.ws.onerror = err => {
             this.log('Ошибка в вебсокете', err);
@@ -56,6 +58,8 @@ export class WebSocketConnection {
         };
 
         window.addEventListener('beforeunload', () => this.ws.close(), false);
+
+        return promise;
     }
 
     private log(...messages) {

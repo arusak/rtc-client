@@ -12,7 +12,7 @@ export abstract class BaseApp {
     protected startButton: HTMLButtonElement;
 
     protected videoConnector: VideoConnector;
-    protected VideoConnectorClass: new(videoSocketId: string) => VideoConnector;
+    protected VideoConnectorClass: new(videoSocketId: string, chatConnection: ChatConnection) => VideoConnector;
     protected view: View;
     protected ViewClass: new(videoConnector: VideoConnector, chatConnection: ChatConnection) => View;
 
@@ -77,8 +77,8 @@ export abstract class BaseApp {
             .then((appointment: any) => {
                 let videoSocketId = appointment.videoSession.id;
                 let chatSocketId = appointment.chatSession.id;
-                this.videoConnector = new this.VideoConnectorClass(videoSocketId);
                 this.chatConnection = new ChatConnection(chatSocketId);
+                this.videoConnector = new this.VideoConnectorClass(videoSocketId, this.chatConnection);
             });
     };
 

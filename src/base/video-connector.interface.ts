@@ -3,7 +3,7 @@ import {Observable} from 'rxjs';
 export interface VideoConnector {
     remoteStream$: Observable<MediaStream>;
     localStream$: Observable<MediaStream>;
-    connectionClosed$: Observable<any>;
+    terminated$: Observable<any>;
 
     /**
      * Позвонить

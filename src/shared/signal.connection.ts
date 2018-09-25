@@ -2,40 +2,38 @@ import {interval, Observable, Subject} from 'rxjs';
 import {SignalMessage} from './webrtc-signal-message.model';
 import {WebSocketConnection} from './web-socket-connection.class';
 import {filter, map, share, shareReplay, takeUntil, tap} from 'rxjs/operators';
+import {fromPromise} from 'rxjs/internal-compatibility';
 
 export class SignalConnection {
     offer$: Observable<SignalMessage>;
     candidate$: Observable<SignalMessage>;
     error$: Observable<SignalMessage>;
     hangup$: Observable<SignalMessage>;
+    terminated$: Observable<any>;
+    opened$: Observable<any>;
 
     private socketConnection: WebSocketConnection;
-    private stopPing$: Subject<any>;
+    private terminatedSubj: Subject<any>;
 
     constructor(socketId: string) {
+        this.terminatedSubj = new Subject();
+        this.terminated$ = this.terminatedSubj.asObservable();
+
         this.socketConnection = new WebSocketConnection();
-        this.socketConnection.connect(`ws/video/${socketId}`);
+        this.opened$ = fromPromise(this.socketConnection.connect(`ws/video/${socketId}`)).pipe(
+            takeUntil(this.terminated$),
+            shareReplay()
+        );
 
-        let data$: Observable<SignalMessage> = this.socketConnection.data$
-            .pipe(
-                map((evt: MessageEvent) => JSON.parse(evt.data)),
-                tap(data => console.log('SIGNAL: ' + data.type)),
-                map(data => new SignalMessage(data)),
-                share()
-            );
-
-        // todo not sure if shareReplay is correct, but it works
-        this.offer$ = data$.pipe(filter(msg => msg.type === 'offer'), shareReplay());
-        this.candidate$ = data$.pipe(filter(msg => msg.type === 'candidate'));
-        this.hangup$ = data$.pipe(filter(msg => msg.type === 'hangup'));
-        this.error$ = data$.pipe(filter(msg => msg.type === 'error'));
-
-        this.setupPing();
+        this.opened$.subscribe(() => {
+            this.setupChannels();
+            this.setupPing();
+        });
     }
 
     close() {
-        this.stopPing$.next();
         this.socketConnection.close();
+        this.terminatedSubj.next();
     }
 
     call() {
@@ -54,11 +52,25 @@ export class SignalConnection {
         this.socketConnection.send({type: 'answer', sdp});
     }
 
-    private setupPing() {
-        this.stopPing$ = new Subject();
+    private setupChannels() {
+        let data$: Observable<SignalMessage> = this.socketConnection.data$
+            .pipe(
+                map((evt: MessageEvent) => JSON.parse(evt.data)),
+                tap(data => console.log('SIGNAL: ' + data.type)),
+                map(data => new SignalMessage(data)),
+                share()
+            );
 
+        // todo not sure if shareReplay is correct, but it works
+        this.offer$ = data$.pipe(filter(msg => msg.type === 'offer'), shareReplay());
+        this.candidate$ = data$.pipe(filter(msg => msg.type === 'candidate'));
+        this.hangup$ = data$.pipe(filter(msg => msg.type === 'hangup'));
+        this.error$ = data$.pipe(filter(msg => msg.type === 'error'));
+    }
+
+    private setupPing() {
         interval(30000)
-            .pipe(takeUntil(this.stopPing$))
+            .pipe(takeUntil(this.terminated$))
             .subscribe(() => this.socketConnection.send({type: 'ping'}));
     }
 }

@@ -1,17 +1,25 @@
 import {VideoConnector} from './video-connector.interface';
 import {ChatConnection} from '../shared/chat.connection';
+import {BaseVideoStateService} from './base-video-state.service';
+import {VideoStateService} from './video-state-service.interface';
+import {SignalConnection} from '../shared/signal.connection';
+import {VideoConnection} from '../shared/video.connection';
 
 export abstract class BaseView {
     protected remoteVideo: HTMLMediaElement;
     protected localVideo: HTMLMediaElement;
     protected hangupButton: HTMLButtonElement;
+
+    protected stateService: BaseVideoStateService;
+    protected VideoStateServiceClass: new(videoConnection: VideoConnection, chatConnection: ChatConnection, signalConnection: SignalConnection) => VideoStateService;
+
     private videoContainer: HTMLDivElement;
 
     constructor(protected videoConnector: VideoConnector, protected chatConnection: ChatConnection) {
         this.subscribeToStreams();
     }
 
-    render(root: HTMLElement, title: string, className: string, buttons: HTMLButtonElement[]) {
+    render(root: HTMLElement, title: string, className: string, elements: HTMLElement[]) {
         let titleElement = document.createElement('h2');
         titleElement.textContent = title;
 
@@ -27,8 +35,6 @@ export abstract class BaseView {
         this.videoContainer.appendChild(this.remoteVideo);
         this.videoContainer.appendChild(this.localVideo);
 
-        let buttonsContainer = document.createElement('div');
-        buttonsContainer.className = 'buttons';
 
         this.hangupButton = document.createElement('button');
         this.hangupButton.innerText = 'Hang up';
@@ -36,17 +42,15 @@ export abstract class BaseView {
         this.hangupButton.addEventListener('click', () => {
             this.videoConnector.hangup();
         });
-        buttons.push(this.hangupButton);
-
-        buttons.forEach(button => {
-            buttonsContainer.appendChild(button);
-        });
+        this.videoContainer.appendChild(this.hangupButton);
 
         let app = document.createElement('div');
         app.className = className;
 
         app.appendChild(titleElement);
-        app.appendChild(buttonsContainer);
+        elements.forEach(button => {
+            root.appendChild(button);
+        });
         app.appendChild(this.videoContainer);
 
         root.appendChild(app);
@@ -69,7 +73,7 @@ export abstract class BaseView {
             this.localVideo.play().catch(console.error);
         });
 
-        this.videoConnector.connectionClosed$.subscribe(() => {
+        this.videoConnector.terminated$.subscribe(() => {
             console.log('Stopping videos');
             this.videoContainer.style.display = 'none';
             this.localVideo.pause();
