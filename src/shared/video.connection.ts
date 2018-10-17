@@ -1,7 +1,7 @@
 import {BehaviorSubject, from, Observable} from 'rxjs';
 import {SignalConnection} from './signal.connection';
 import {SignalMessage} from './webrtc-signal-message.model';
-import {filter, flatMap, map} from 'rxjs/operators';
+import {filter, flatMap, mapTo} from 'rxjs/operators';
 
 export class VideoConnection {
     remoteStream$: Observable<MediaStream>;
@@ -65,15 +65,17 @@ export class VideoConnection {
             flatMap((msg: SignalMessage) => {
                 console.log('Got offer. Setting remote description');
                 let remoteDescription = new RTCSessionDescription({type: 'offer', sdp: msg.sdp});
-                return this.pc.setRemoteDescription(remoteDescription);
+                return from(this.pc.setRemoteDescription(remoteDescription))
+                    .pipe(mapTo(remoteDescription));
             }),
-            flatMap((desc: RTCSessionDescription) => {
+            flatMap((remoteDesc: RTCSessionDescription) => {
                 console.log('Creating answer');
-                return this.pc.createAnswer(<RTCAnswerOptions>desc)
+                return this.pc.createAnswer(<RTCAnswerOptions>remoteDesc)
             }),
-            flatMap((desc: RTCSessionDescription) => {
+            flatMap((localDesc: RTCSessionDescription) => {
                 console.log('Setting local description');
-                return from(this.pc.setLocalDescription(desc)).pipe(map(() => desc));
+                return from(this.pc.setLocalDescription(localDesc))
+                    .pipe(mapTo(localDesc));
             })
         ).subscribe((desc: RTCSessionDescription) => {
                 console.log('Sending answer');
