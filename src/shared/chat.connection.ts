@@ -19,7 +19,7 @@ export class ChatConnection {
     private connect(socketId: string) {
         console.log('Initializing chat connection');
         this.socketConnection = new WebSocketConnection();
-        this.socketConnection.connect(`ws/chat/${socketId}`);
+        this.socketConnection.connect(`chat/${socketId}`);
     }
 
     private setupChannels() {

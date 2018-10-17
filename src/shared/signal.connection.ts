@@ -1,8 +1,7 @@
-import {interval, Observable, Subject} from 'rxjs';
+import {from, interval, Observable, Subject} from 'rxjs';
 import {SignalMessage} from './webrtc-signal-message.model';
 import {WebSocketConnection} from './web-socket-connection.class';
 import {filter, map, share, shareReplay, takeUntil, tap} from 'rxjs/operators';
-import {fromPromise} from 'rxjs/internal-compatibility';
 
 export class SignalConnection {
     offer$: Observable<SignalMessage>;
@@ -20,10 +19,11 @@ export class SignalConnection {
         this.terminated$ = this.terminatedSubj.asObservable();
 
         this.socketConnection = new WebSocketConnection();
-        this.opened$ = fromPromise(this.socketConnection.connect(`ws/video/${socketId}`)).pipe(
-            takeUntil(this.terminated$),
-            shareReplay()
-        );
+        this.opened$ = from(this.socketConnection.connect(`video/${socketId}`))
+            .pipe(
+                takeUntil(this.terminated$),
+                shareReplay()
+            );
 
         this.opened$.subscribe(() => {
             this.setupChannels();
