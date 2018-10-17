@@ -45,8 +45,7 @@ export abstract class BaseApp {
 
                 this.connect();
             } else {
-                this.errorContainer.style.display = 'block';
-                this.errorContainer.innerText = 'Authentication failed.'
+                this.showError('Authentication failed.');
             }
         });
 
@@ -56,14 +55,20 @@ export abstract class BaseApp {
     }
 
     private connect() {
-        this.connectContainer.parentElement.removeChild(this.connectContainer);
         this.showLoader();
 
         let appointmentId = this.appointmentIdInput.value.trim();
+        this.hideError();
 
         this.createConnections(appointmentId).then(() => {
-            this.renderView();
             this.hideLoader();
+            if (this.chatConnection) {
+                this.connectContainer.parentElement.removeChild(this.connectContainer);
+                this.renderView();
+            } else {
+                this.errorContainer.style.display = 'block';
+                this.errorContainer.innerText = 'Connection failed.'
+            }
         });
     }
 
@@ -75,10 +80,12 @@ export abstract class BaseApp {
         return fetch(`/api/appointment/${appointmentId}`)
             .then(r => r.json())
             .then((appointment: any) => {
-                let videoSocketId = appointment.videoSession.id;
-                let chatSocketId = appointment.chatSession.id;
-                this.chatConnection = new ChatConnection(chatSocketId);
-                this.videoConnector = new this.VideoConnectorClass(videoSocketId, this.chatConnection);
+                if (appointment.chatSession) {
+                    let videoSocketId = appointment.videoSession.id;
+                    let chatSocketId = appointment.chatSession.id;
+                    this.chatConnection = new ChatConnection(chatSocketId);
+                    this.videoConnector = new this.VideoConnectorClass(videoSocketId, this.chatConnection);
+                }
             });
     };
 
@@ -93,6 +100,15 @@ export abstract class BaseApp {
 
     private hideLoader() {
         this.loader.style.display = 'none';
+    }
+
+    private showError(text: string) {
+        this.errorContainer.style.display = 'block';
+        this.errorContainer.innerText = text;
+    }
+
+    private hideError() {
+        this.errorContainer.style.display = 'none';
     }
 }
 
