@@ -16,7 +16,7 @@ export class VideoConnection {
         this.pc = new RTCPeerConnection(rtcConfig);
         this.pc.addStream(this.localStream);
 
-        this.init();
+        signalSocket.opened$.subscribe(() => this.init())
     }
 
     get remoteStream() {
@@ -24,7 +24,7 @@ export class VideoConnection {
     }
 
     init() {
-        // todo addstream is depecated, use `track` event
+        // todo addstream is deprecated, use `track` event
         console.log('Listening to `addstream` event');
         this.pc.addEventListener('addstream', (evt: MediaStreamEvent) => {
             console.log('Got a remote stream', evt.stream.getVideoTracks());

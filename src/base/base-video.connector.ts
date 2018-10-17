@@ -64,7 +64,10 @@ export abstract class BaseVideoConnector implements VideoConnector {
                 this.videoConnection.close();
                 this.terminatedSubj.next();
             });
-        this.signalSocket.error$.subscribe(console.error);
+
+        this.signalSocket.opened$
+            .pipe(flatMap(() => this.signalSocket.error$))
+            .subscribe(console.error);
     }
 
     private sendCall() {
