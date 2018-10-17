@@ -33,7 +33,7 @@ export class WebSocketConnection {
         this.url = url;
 
         this.log(`Соединяемся...`);
-        this.ws = new WebSocket(`ws://localhost:8080/${this.url}`);
+        this.ws = new WebSocket(`${location.origin.replace(/^http/, 'ws')}/ws/${this.url}`);
 
         let promise = new Promise(resolve => {
             this.ws.onopen = () => {
