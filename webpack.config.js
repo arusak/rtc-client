@@ -63,6 +63,20 @@ module.exports = {
 
     ],
     devServer: {
+        before(app) {
+            // по умолчанию открываем пациентское
+            app.get('/', function (req, res) {
+                res.redirect(301, '/patient.html');
+            });
+            // по умолчанию открываем пациентское
+            app.get('/p', function (req, res) {
+                res.redirect(301, '/patient.html');
+            });
+            // по умолчанию открываем пациентское
+            app.get('/d', function (req, res) {
+                res.redirect(301, '/doctor.html');
+            });
+        },
         hot: false,
         inline: true,
         // полный путь к статике
