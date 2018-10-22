@@ -8,7 +8,7 @@ export class LoginSession {
             method: 'POST',
             //mode: "cors", // no-cors, cors, *same-origin
             cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-            //credentials: "same-origin", // include, same-origin, *omit
+            credentials: 'same-origin', // include, same-origin, *omit
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
             },
@@ -21,5 +21,5 @@ export class LoginSession {
             .then(response => response.json()) // parses response to JSON
             .catch(error => console.error(`Fetch Error =\n`, error));
 
-    };
+    }
 }
