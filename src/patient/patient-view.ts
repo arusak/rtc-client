@@ -30,7 +30,7 @@ export class PatientView extends BaseView {
 
         this.dialog = document.createElement('div');
         this.dialog.className = 'dialog';
-        // this.dialog.style.display = 'none';
+        this.dialog.style.display = 'none';
         this.dialog.appendChild(this.acceptButton);
         this.dialog.appendChild(this.declineButton);
         let dialogTitle = document.createElement('h3');
@@ -45,18 +45,21 @@ export class PatientView extends BaseView {
         this.chatConnection.call$.subscribe(() => {
             this.enable(this.acceptButton);
             this.enable(this.declineButton);
+            this.dialog.style.display = 'block';
         });
 
         this.chatConnection.accepted$.subscribe(()=>{
             this.disable(this.acceptButton);
             this.disable(this.declineButton);
             this.enable(this.hangupButton);
+            this.dialog.style.display = 'none';
         });
 
         this.chatConnection.ended$.subscribe(()=>{
             this.disable(this.acceptButton);
             this.disable(this.declineButton);
             this.disable(this.hangupButton);
+            this.dialog.style.display = 'none';
         });
     }
 }
