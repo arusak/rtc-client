@@ -5,7 +5,7 @@ import {PatientVideoStateService} from './patient-video-state.service';
 
 export class PatientApp extends BaseApp {
     constructor() {
-        super();
+        super('Patient');
         this.VideoConnectorClass = PatientVideoConnector;
         this.ViewClass = PatientView;
         this.authParameters = {

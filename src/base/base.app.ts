@@ -20,20 +20,23 @@ export abstract class BaseApp {
 
     protected session: LoginSession;
     private chatConnection: ChatConnection;
+    private appName: string;
 
-    protected constructor() {
+    protected constructor(appName: string) {
         this.connectContainer = document.querySelector('.connect-container');
         this.errorContainer = document.querySelector('.error-container');
         this.appointmentIdInput = document.querySelector('.appointmentId');
         this.rootElement = document.querySelector('.root');
         this.startButton = document.querySelector('.start');
         this.loader = document.querySelector('.loader');
+        this.appName = appName;
     }
 
     /**
      * Authenticate and show connection button
      */
     start() {
+        this.renderAppName();
         this.createLoginSession();
         this.session.auth().then(result => {
             this.hideLoader();
@@ -52,6 +55,10 @@ export abstract class BaseApp {
         this.startButton.addEventListener('click', () => {
             this.connect();
         });
+    }
+
+    private renderAppName() {
+        document.querySelector('.appname')['innerText'] = this.appName;
     }
 
     private connect() {
@@ -77,7 +84,7 @@ export abstract class BaseApp {
     };
 
     private createConnections(appointmentId: string): Promise<any> {
-        return fetch(`/api/appointment/${appointmentId}`)
+        return fetch(`/api/appointment/${appointmentId}`, {credentials: 'same-origin'})
             .then(r => r.json())
             .then((appointment: any) => {
                 if (appointment.chatSession) {

@@ -4,7 +4,7 @@ import {DoctorVideoConnector} from './doctor-video.connector';
 
 export class DoctorApp extends BaseApp {
     constructor() {
-        super();
+        super('Doctor');
         this.VideoConnectorClass = DoctorVideoConnector;
         this.ViewClass = DoctorView;
         this.authParameters = {

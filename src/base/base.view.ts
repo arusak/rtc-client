@@ -20,9 +20,6 @@ export abstract class BaseView {
     }
 
     render(root: HTMLElement, title: string, className: string, elements: HTMLElement[]) {
-        let titleElement = document.createElement('h2');
-        titleElement.textContent = title;
-
         this.remoteVideo = document.createElement('video');
         this.remoteVideo.className = 'remote';
         this.localVideo = document.createElement('video');
@@ -47,7 +44,6 @@ export abstract class BaseView {
         let app = document.createElement('div');
         app.className = className;
 
-        app.appendChild(titleElement);
         elements.forEach(button => {
             root.appendChild(button);
         });
