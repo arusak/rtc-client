@@ -29,7 +29,7 @@ export class WebSocketConnection {
         this.ws.close();
     }
 
-    connect(url: string):Promise<any> {
+    connect(url: string): Promise<any> {
         this.url = url;
 
         this.log(`Соединяемся...`);
@@ -42,6 +42,8 @@ export class WebSocketConnection {
                 while (this.sendBuffer.length > 0) {
                     this.send(this.sendBuffer.shift());
                 }
+
+                resolve();
             };
         });
 
