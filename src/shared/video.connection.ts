@@ -14,34 +14,31 @@ export class VideoConnection {
     private videoSender: RTCRtpSender;
     private audioSender: RTCRtpSender;
 
-    constructor(private localStream: MediaStream, private signalSocket: SignalConnection) {
+    constructor(private localStream: MediaStream, private signalSocket: SignalConnection, private rtcConfig: any) {
         this.localVideoTrack = localStream.getVideoTracks().length > 0 && localStream.getVideoTracks()[0] || null;
         this.localAudioTrack = localStream.getAudioTracks().length > 0 && localStream.getAudioTracks()[0] || null;
 
         this.remoteStreamSubj = new BehaviorSubject(null);
-        this.remoteStream$ = this.remoteStreamSubj.asObservable().pipe(filter(v => v !== null));
+        this.remoteStream$ = this.remoteStreamSubj.pipe(filter(v => v !== null));
 
+        signalSocket.opened$.subscribe(() => this.open())
+    }
+
+    // todo разбить на более короткие
+    private open() {
         this.log('Creating new RTC connection');
-        this.pc = new RTCPeerConnection(rtcConfig);
+        this.pc = new RTCPeerConnection(this.rtcConfig);
 
         if (this.localVideoTrack) {
             this.log('Adding local video track to RTC connection');
-            this.videoSender = this.pc.addTrack(this.localVideoTrack, localStream);
+            this.videoSender = this.pc.addTrack(this.localVideoTrack, this.localStream);
         }
 
         if (this.localAudioTrack) {
             this.log('Adding local audio track to RTC connection');
-            this.audioSender = this.pc.addTrack(this.localAudioTrack, localStream);
+            this.audioSender = this.pc.addTrack(this.localAudioTrack, this.localStream);
         }
 
-        signalSocket.opened$.subscribe(() => this.init())
-    }
-
-    get remoteStream() {
-        return this.remoteStreamSubj.value;
-    }
-
-    init() {
         this.log('Listening to `track` event');
         this.pc.addEventListener('track', (evt: RTCTrackEvent) => {
             let remoteStream = evt.streams[0];
@@ -61,22 +58,16 @@ export class VideoConnection {
         });
 
         this.pc.addEventListener('icegatheringstatechange', (evt: Event) => {
-            this.log('Gathering of candidated state: ' + this.pc.iceGatheringState);
-        });
-
-        this.pc.addEventListener('connectionstatechange', (evt: Event) => {
-            this.log('RTC connection state: ' + this.pc.connectionState);
+            this.log('Gathering of candidates: ' + (this.pc && this.pc.iceGatheringState));
         });
 
         this.pc.addEventListener('iceconnectionstatechange', (evt: Event) => {
-            this.log('ICE connection state: ' + this.pc.iceConnectionState);
+            this.log('ICE connection state: ' + (this.pc && this.pc.iceConnectionState));
         });
 
-        /* not needed because we won't create offer */
-        // this.log('Listening to negotiationneeded event');
-        // this.pc.addEventListener('negotiationneeded', () => {
-        //     this.log('Negotiation needed. Doing nothing.');
-        // });
+        this.pc.addEventListener('negotiationneeded', () => {
+            this.log('Negotiation needed. Doing nothing.');
+        });
 
         this.log('Waiting for remote candidates');
         this.signalSocket.candidate$.subscribe(msg => {
@@ -126,23 +117,22 @@ export class VideoConnection {
             this.pc = undefined;
         }
         this.remoteStreamSubj.complete();
+        this.remoteStreamSubj = null;
+
+        this.localStream.getTracks().forEach(t => t.stop());
+        this.localStream = null;
+        this.localVideoTrack = null;
+        this.localAudioTrack = null;
+        this.videoSender = null;
+        this.audioSender = null;
+
+        setTimeout(() => {
+            console.log(this.audioSender, this.videoSender, this.localAudioTrack, this.localVideoTrack, this.localStream);
+        }, 1000);
     }
 
     private log(...messages) {
         let text = messages.map(msg => typeof msg === 'object' ? JSON.stringify(msg) : msg).join(' ');
         console.log(`%c[V-CONNECTION] ${text}`, 'color: #f4b');
     }
-
 }
-
-const rtcConfig = {
-    iceTransportPolicy: <RTCIceTransportPolicy>'relay',
-    iceServers:
-        [
-            {
-                urls: 'turn:194.87.190.85:3478',
-                username: 'mls',
-                credential: 'Password1'
-            }
-        ]
-};

@@ -68,6 +68,8 @@ export class SignalConnection {
             filter(msg => msg.type === 'offer'),
             shareReplay(1),
         );
+        // gotta subscribe to begin caching offers right after connect
+        this.offer$.subscribe();
 
         this.candidate$ = data$.pipe(
             filter(msg => msg.type === 'candidate'),

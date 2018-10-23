@@ -135,7 +135,7 @@ export abstract class BaseApp {
     private createConnections(appointmentId: string): Promise<any> {
         return fetch(`/api/appointment/${appointmentId}`, {credentials: 'same-origin'})
             .then(r => r.json())
-            .then((appointment: any) => {
+            .then(appointment => {
                 if (appointment.state = 'ACTIVE' && appointment.chatSession && appointment.videoSession) {
                     let videoSocketId = appointment.videoSession.id;
                     let chatSocketId = appointment.chatSession.id;
