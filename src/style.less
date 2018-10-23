@@ -36,8 +36,18 @@ video {
   position: fixed;
 }
 
-.connect-container {
+.connect-form,
+.login-form {
   padding: 0.25rem;
+  display: table;
+  & label {
+    display: table-row;
+    & span,
+    & input {
+      display: table-cell;
+      padding: 0.25rem;
+    }
+  }
 }
 
 .error-container {

@@ -8,24 +8,49 @@
   <title>Video chat</title>
 </head>
 <body>
-<div class="loader">
+
+<div class="loader" style="display:none">
   <div class="spinner"></div>
   <p>Loading...</p>
 </div>
+
 <div class="header">
   <span class="appname"></span>
   <span class="username"></span>
 </div>
-<div class="connect-container" style="display: none">
-  <div>
-    <label>
-      <span>AppointmentId</span>
-      <input class="appointmentId" value="11">
-    </label>
-    <button class="start">Connect</button>
-  </div>
+
+<div class="login-form" style="display: none">
+  <label>
+    <span>Username</span>
+    <input name="username">
+  </label>
+
+  <label>
+    <span>Password</span>
+    <input name="password">
+  </label>
+
+  <label>
+    <span></span>
+    <input type="button" class="login-btn" value="Connect">
+  </label>
 </div>
+
+<div class="connect-form" style="display:none">
+  <label>
+    <span>AppointmentId</span>
+    <input name="appointmentId" value="11">
+  </label>
+
+  <label>
+    <span></span>
+    <input type="button" class="connect-btn" value="Connect">
+  </label>
+</div>
+
 <div class="error-container" style="display: none"></div>
+
 <div class="root"></div>
+
 </body>
 </html>

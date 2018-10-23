@@ -9,7 +9,7 @@ export class PatientApp extends BaseApp {
         this.VideoConnectorClass = PatientVideoConnector;
         this.ViewClass = PatientView;
         this.authParameters = {
-            url: '/api/patient/login', username: 'slukov', password: 'slukov'
+            url: '/api/patient/login'
         };
     }
 

@@ -1,10 +1,20 @@
+import {AuthParameters} from '../base/auth-parameters.interface';
+
 export class LoginSession {
-    constructor(private url: string, private username: string, private password: string) {
+    constructor() {
     }
 
-    auth(): Promise<any> {
+    check(): Promise<string> {
+        return fetch('/api/auth/person', {credentials: 'same-origin'})
+            .then(response => response.json())
+            .then(result => {
+                return result.username;
+            });
+    }
+
+    auth(params: AuthParameters): Promise<any> {
         // Default options are marked with *
-        return fetch(this.url, {
+        return fetch(params.url, {
             method: 'POST',
             //mode: "cors", // no-cors, cors, *same-origin
             cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
@@ -15,7 +25,7 @@ export class LoginSession {
             redirect: 'follow', // manual, *follow, error
             referrer: 'no-referrer', // no-referrer, *client
             body: JSON.stringify({
-                username: this.username, password: this.password, deviceType: 'BROWSER'
+                username: params.username, password: params.password, deviceType: 'BROWSER'
             }), // body data type must match "Content-Type" header
         })
             .then(response => response.json()) // parses response to JSON
