@@ -1,22 +1,9 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const WriteFilePlugin = require('write-file-webpack-plugin');
-const root = process.cwd();
-const utils = require('./webpack.utils.js');
+const env = require('./webpack/env');
+const dir = require('./webpack/dir');
 
-const dir = {
-    src: path.join(root, 'src'),
-    build: path.join(root, 'build'),
-    lib: path.join(root, 'node_modules'),
-};
-
-const env = {
-    hostname: process.env.HOSTNAME || 'localhost',
-    port: process.env.PORT || 3000,
-    keystore: utils.readKeystore(process.env.KEYSTORE),
-    keystorePass: process.env.KEYSTORE_PASSWORD,
-    ssl: !!process.env.KEYSTORE && !!process.env.KEYSTORE_PASSWORD,
-};
 
 module.exports = {
     mode: 'development',
@@ -94,13 +81,13 @@ module.exports = {
         } : false,
         proxy: {
             '/api': {
-                target: `${env.ssl ? 'https' : 'http'}://${env.hostname}:${env.ssl ? '8443' : '8080'}`,
+                target: `${env.ssl ? 'https' : 'http'}://${env.apiHostname}:${env.apiPort}`,
                 changeOrigin: true,
                 secure: false,
                 logLevel: 'debug',
             },
             '/ws': {
-                target: `${env.ssl ? 'wss' : 'ws'}://${env.hostname}:${env.ssl ? '8443' : '8080'}`,
+                target: `${env.ssl ? 'wss' : 'ws'}://${env.apiHostname}:${env.apiPort}`,
                 changeOrigin: true,
                 secure: false,
                 ws: true,
