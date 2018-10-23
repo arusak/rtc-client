@@ -1,6 +1,6 @@
 import {BaseView} from '../base/base.view';
 import {ChatConnection} from '../shared/chat.connection';
-import {VideoConnector} from '../base/video-connector.interface';
+import {VideoConnector} from '../base/interfaces/video-connector.interface';
 import {PatientVideoStateService} from './patient-video-state.service';
 
 export class PatientView extends BaseView {

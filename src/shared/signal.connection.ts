@@ -1,5 +1,5 @@
 import {from, interval, Observable, Subject} from 'rxjs';
-import {SignalMessage} from './webrtc-signal-message.model';
+import {SignalMessage} from './models/webrtc-signal-message.model';
 import {WebSocketConnection} from './web-socket-connection.class';
 import {filter, map, share, shareReplay, takeUntil, tap} from 'rxjs/operators';
 

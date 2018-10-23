@@ -3,7 +3,7 @@ import {ChatConnection} from '../shared/chat.connection';
 import {BehaviorSubject, Observable} from 'rxjs';
 import {filter} from 'rxjs/operators';
 import {SignalConnection} from '../shared/signal.connection';
-import {VideoState} from './video-state-service.interface';
+import {VideoState} from './interfaces/video-state-service.interface';
 
 export class BaseVideoStateService {
     state$: Observable<VideoState>;

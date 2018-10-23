@@ -1,6 +1,6 @@
 import {BehaviorSubject, from, Observable} from 'rxjs';
 import {SignalConnection} from './signal.connection';
-import {SignalMessage} from './webrtc-signal-message.model';
+import {SignalMessage} from './models/webrtc-signal-message.model';
 import {filter, flatMap, mapTo} from 'rxjs/operators';
 
 export class VideoConnection {

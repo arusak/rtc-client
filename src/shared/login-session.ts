@@ -1,4 +1,4 @@
-import {AuthParameters} from '../base/auth-parameters.interface';
+import {AuthParameters} from '../base/interfaces/auth-parameters.interface';
 
 export class LoginSession {
     constructor() {

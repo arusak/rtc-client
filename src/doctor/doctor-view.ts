@@ -1,5 +1,5 @@
 import {BaseView} from '../base/base.view';
-import {VideoConnector} from '../base/video-connector.interface';
+import {VideoConnector} from '../base/interfaces/video-connector.interface';
 import {ChatConnection} from '../shared/chat.connection';
 import {DoctorVideoStateService} from './doctor-video-state.service';
 

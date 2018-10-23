@@ -1,8 +1,8 @@
-import {VideoConnector} from './video-connector.interface';
-import {View} from './view.interface';
+import {VideoConnector} from './interfaces/video-connector.interface';
+import {View} from './interfaces/view.interface';
 import {LoginSession} from '../shared/login-session';
 import {ChatConnection} from '../shared/chat.connection';
-import {AuthParameters} from './auth-parameters.interface';
+import {AuthParameters} from './interfaces/auth-parameters.interface';
 
 export abstract class BaseApp {
     protected videoConnector: VideoConnector;

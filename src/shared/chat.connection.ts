@@ -1,7 +1,7 @@
 import {WebSocketConnection} from './web-socket-connection.class';
 import {Observable} from 'rxjs';
 import {filter, map, share, tap} from 'rxjs/operators';
-import {ChatMessage} from './chat-message.model';
+import {ChatMessage} from './models/chat-message.model';
 import * as moment from 'moment';
 
 export class ChatConnection {

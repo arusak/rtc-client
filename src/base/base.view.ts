@@ -1,7 +1,7 @@
-import {VideoConnector} from './video-connector.interface';
+import {VideoConnector} from './interfaces/video-connector.interface';
 import {ChatConnection} from '../shared/chat.connection';
 import {BaseVideoStateService} from './base-video-state.service';
-import {VideoStateService} from './video-state-service.interface';
+import {VideoStateService} from './interfaces/video-state-service.interface';
 import {SignalConnection} from '../shared/signal.connection';
 import {VideoConnection} from '../shared/video.connection';
 

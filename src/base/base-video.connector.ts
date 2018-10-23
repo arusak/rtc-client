@@ -1,7 +1,7 @@
 import {from, Observable, Subject} from 'rxjs';
 import {VideoConnection} from '../shared/video.connection';
 import {SignalConnection} from '../shared/signal.connection';
-import {VideoConnector} from './video-connector.interface';
+import {VideoConnector} from './interfaces/video-connector.interface';
 import {flatMap, take} from 'rxjs/operators';
 import {ChatConnection} from '../shared/chat.connection';
 
