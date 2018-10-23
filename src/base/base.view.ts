@@ -58,19 +58,19 @@ export abstract class BaseView {
         }
 
         this.videoConnector.remoteStream$.subscribe(stream => {
-            console.log('Starting remote video');
+            this.log('Starting remote video');
             this.remoteVideo.srcObject = stream;
             this.remoteVideo.play().catch(console.error);
         });
 
         this.videoConnector.localStream$.subscribe(stream => {
-            console.log('Starting local video');
+            this.log('Starting local video');
             this.localVideo.srcObject = stream;
             this.localVideo.play().catch(console.error);
         });
 
         this.videoConnector.terminated$.subscribe(() => {
-            console.log('Stopping videos');
+            this.log('Stopping videos');
             this.videoContainer.style.display = 'none';
             this.localVideo.pause();
             this.remoteVideo.pause();
@@ -102,4 +102,8 @@ export abstract class BaseView {
         this.videoContainer.style.display = 'none';
     }
 
+    protected log(...messages) {
+        let text = messages.map(msg => typeof msg === 'object' ? JSON.stringify(msg) : msg).join(' ');
+        console.log(`%c[VIEW] ${text}`, 'color: #074');
+    }
 }

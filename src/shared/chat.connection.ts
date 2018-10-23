@@ -17,7 +17,7 @@ export class ChatConnection {
     }
 
     private connect(socketId: string) {
-        console.log('Initializing chat connection');
+        this.log('Initializing chat connection');
         this.socketConnection = new WebSocketConnection();
         this.socketConnection.connect(`chat/${socketId}`);
     }
@@ -28,7 +28,7 @@ export class ChatConnection {
             .pipe(
                 map(msgEvt => new ChatMessage(JSON.parse(msgEvt.data))),
                 filter((msg: ChatMessage) => msg.timestamp.isAfter(start)),
-                tap((msg: ChatMessage) => console.log(`CHAT: ${msg.type}`)),
+                tap((msg: ChatMessage) => this.log(`${msg.type}`)),
                 share());
 
         this.call$ = data$.pipe(filter(msg => msg.type === 'VIDEO_CALL_STARTED'));
@@ -39,4 +39,10 @@ export class ChatConnection {
     close() {
         this.socketConnection.close();
     }
+
+    private log(...messages) {
+        let text = messages.map(msg => typeof msg === 'object' ? JSON.stringify(msg) : msg).join(' ');
+        console.log(`%c[CHAT] ${text}`, 'color: #999');
+    }
+
 }

@@ -33,33 +33,33 @@ export abstract class BaseVideoConnector implements VideoConnector {
     protected initializeConnection(passive?: boolean) {
         this.initializeSignalSocket();
 
-        console.log('Requesting access to devices');
+        this.log('Requesting access to devices');
         from(navigator.mediaDevices.getUserMedia({video: true, audio: true}))
             .pipe(
                 flatMap((localStream: MediaStream) => {
                     this.localStreamSubj.next(localStream);
-                    console.log('Got access. Got local stream. Creating a new video connection');
+                    this.log('Got access. Got local stream. Creating a new video connection');
                     this.videoConnection = new VideoConnection(localStream, this.signalSocket);
                     if (!passive) this.sendCall();
-                    console.log('Waiting for remote stream');
+                    this.log('Waiting for remote stream');
                     return this.videoConnection.remoteStream$;
                 }),
                 take(1)
             )
             .subscribe(remoteStream => {
-                console.log('Got a remote stream');
+                this.log('Got a remote stream');
                 this.remoteStreamSubj.next(remoteStream);
             });
 
     }
 
     private initializeSignalSocket() {
-        console.log('Initializing a signal socket');
+        this.log('Initializing a signal socket');
         this.signalSocket = new SignalConnection(this.signalSocketId);
         this.chatConnection.ended$
             .pipe(take(1))
             .subscribe(() => {
-                console.log('Closing connections');
+                this.log('Closing connections');
                 this.signalSocket.close();
                 this.videoConnection.close();
                 this.terminatedSubj.next();
@@ -71,7 +71,7 @@ export abstract class BaseVideoConnector implements VideoConnector {
     }
 
     private sendCall() {
-        console.log('Sending call to signal socket');
+        this.log('Sending call to signal socket');
         this.signalSocket.call();
     }
 
@@ -93,5 +93,10 @@ export abstract class BaseVideoConnector implements VideoConnector {
 
     cancel(): void {
         throw new Error('Not implemented');
+    }
+
+    protected log(...messages) {
+        let text = messages.map(msg => typeof msg === 'object' ? JSON.stringify(msg) : msg).join(' ');
+        console.log(`%c[CONNECTOR] ${text}`, 'color: #b0b');
     }
 }

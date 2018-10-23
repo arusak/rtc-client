@@ -1,7 +1,7 @@
 import {from, interval, Observable, Subject} from 'rxjs';
 import {SignalMessage} from './models/webrtc-signal-message.model';
 import {WebSocketConnection} from './web-socket-connection.class';
-import {filter, map, share, shareReplay, takeUntil, tap} from 'rxjs/operators';
+import {filter, map, share, shareReplay, take, takeUntil, tap} from 'rxjs/operators';
 
 export class SignalConnection {
     offer$: Observable<SignalMessage>;
@@ -19,14 +19,15 @@ export class SignalConnection {
         this.terminated$ = this.terminatedSubj.asObservable();
 
         this.socketConnection = new WebSocketConnection();
+        this.setupChannels();
+
         this.opened$ = from(this.socketConnection.connect(`video/${socketId}`))
             .pipe(
-                takeUntil(this.terminated$),
-                shareReplay()
+                take(1),
+                shareReplay(1)
             );
 
         this.opened$.subscribe(() => {
-            this.setupChannels();
             this.setupPing();
         });
     }
@@ -56,21 +57,39 @@ export class SignalConnection {
         let data$: Observable<SignalMessage> = this.socketConnection.data$
             .pipe(
                 map((evt: MessageEvent) => JSON.parse(evt.data)),
-                tap(data => console.log('SIGNAL: ' + data.type)),
+                tap(data => this.log(data.type)),
                 map(data => new SignalMessage(data)),
                 share()
             );
 
-        // todo not sure if shareReplay is correct, but it works
-        this.offer$ = data$.pipe(filter(msg => msg.type === 'offer'), shareReplay());
-        this.candidate$ = data$.pipe(filter(msg => msg.type === 'candidate'));
-        this.hangup$ = data$.pipe(filter(msg => msg.type === 'hangup'));
-        this.error$ = data$.pipe(filter(msg => msg.type === 'error'));
+        this.log('Setting up channels');
+
+        this.offer$ = data$.pipe(
+            filter(msg => msg.type === 'offer'),
+            shareReplay(1),
+        );
+
+        this.candidate$ = data$.pipe(
+            filter(msg => msg.type === 'candidate'),
+        );
+
+        this.hangup$ = data$.pipe(
+            filter(msg => msg.type === 'hangup'),
+        );
+
+        this.error$ = data$.pipe(
+            filter(msg => msg.type === 'error'),
+        );
     }
 
     private setupPing() {
         interval(30000)
             .pipe(takeUntil(this.terminated$))
             .subscribe(() => this.socketConnection.send({type: 'ping'}));
+    }
+
+    private log(...messages) {
+        let text = messages.map(msg => typeof msg === 'object' ? JSON.stringify(msg) : msg).join(' ');
+        console.log(`%c[SIGNAL] ${text}`, 'color: #f90');
     }
 }

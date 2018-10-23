@@ -28,6 +28,7 @@ export abstract class BaseApp {
     private session: LoginSession;
     private chatConnection: ChatConnection;
     private appName: string;
+    private appointmentId: string;
 
     protected constructor(appName: string) {
         this.connectForm = document.querySelector('.connect-form');
@@ -65,6 +66,10 @@ export abstract class BaseApp {
         this.connectButton.addEventListener('click', () => {
             this.connect();
         });
+    }
+
+    private renderAppointmentId() {
+        document.querySelector('.appointment-id')['innerText'] = this.appointmentId;
     }
 
     private renderAppName() {
@@ -111,15 +116,16 @@ export abstract class BaseApp {
     private connect() {
         this.showLoader();
 
-        let appointmentId = this.appointmentIdInput.value.trim();
+        this.appointmentId = this.appointmentIdInput.value.trim();
         this.hideError();
 
-        this.createConnections(appointmentId).then(() => {
+        this.createConnections(this.appointmentId).then(() => {
             this.hideLoader();
             if (this.chatConnection) {
-                localStorage.setItem('appointmentId', appointmentId);
+                localStorage.setItem('appointmentId', this.appointmentId);
                 this.hide(this.connectForm);
                 this.renderView();
+                this.renderAppointmentId();
             } else {
                 this.showError('Connection failed.');
             }
@@ -130,7 +136,7 @@ export abstract class BaseApp {
         return fetch(`/api/appointment/${appointmentId}`, {credentials: 'same-origin'})
             .then(r => r.json())
             .then((appointment: any) => {
-                if (appointment.chatSession) {
+                if (appointment.state = 'ACTIVE' && appointment.chatSession && appointment.videoSession) {
                     let videoSocketId = appointment.videoSession.id;
                     let chatSocketId = appointment.chatSession.id;
                     this.chatConnection = new ChatConnection(chatSocketId);

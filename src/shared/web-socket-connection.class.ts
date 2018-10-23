@@ -65,10 +65,7 @@ export class WebSocketConnection {
     }
 
     private log(...messages) {
-        messages = messages.map(msg => {
-            if (typeof msg === 'object') msg = JSON.stringify(msg);
-            return msg;
-        });
-        console.log(`%c${messages.join(' ')}`, 'color: #ccc');
+        let text = messages.map(msg => typeof msg === 'object' ? JSON.stringify(msg) : msg).join(' ');
+        console.log(`%c[WS] ${text}`, 'color: #aaa');
     }
 }
