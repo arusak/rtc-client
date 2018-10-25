@@ -3,12 +3,17 @@ import {View} from './interfaces/view.interface';
 import {LoginSession} from '../shared/login-session';
 import {ChatConnection} from '../shared/chat.connection';
 import {AuthParameters} from './interfaces/auth-parameters.interface';
+import {VideoStateService} from './interfaces/video-state-service.interface';
 
 export abstract class BaseApp {
-    protected videoConnector: VideoConnector;
-    protected VideoConnectorClass: new(videoSocketId: string, chatConnection: ChatConnection) => VideoConnector;
-    protected view: View;
     protected ViewClass: new(videoConnector: VideoConnector, chatConnection: ChatConnection) => View;
+    protected VideoConnectorClass: new(videoSocketId: string, chatConnection: ChatConnection) => VideoConnector;
+    protected VideoStateServiceClass: new(videoConnector: VideoConnector, chatConnection: ChatConnection) => VideoStateService;
+
+    protected videoConnector: VideoConnector;
+    protected view: View;
+    protected videoStateService: VideoStateService;
+
     protected authParameters: AuthParameters;
 
     private rootElement: HTMLElement;
@@ -141,6 +146,7 @@ export abstract class BaseApp {
                     let chatSocketId = appointment.chatSession.id;
                     this.chatConnection = new ChatConnection(chatSocketId);
                     this.videoConnector = new this.VideoConnectorClass(videoSocketId, this.chatConnection);
+                    this.videoStateService = new this.VideoStateServiceClass(this.videoConnector, this.chatConnection)
                 }
             });
     };

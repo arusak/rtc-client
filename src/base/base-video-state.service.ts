@@ -4,12 +4,13 @@ import {BehaviorSubject, Observable} from 'rxjs';
 import {filter} from 'rxjs/operators';
 import {SignalConnection} from '../shared/signal.connection';
 import {VideoState} from './interfaces/video-state-service.interface';
+import {VideoConnector} from './interfaces/video-connector.interface';
 
 export class BaseVideoStateService {
     state$: Observable<VideoState>;
     protected stateSubj: BehaviorSubject<VideoState>;
 
-    constructor(protected videoConnection: VideoConnection, protected chatConnection: ChatConnection, protected signalConnection: SignalConnection) {
+    constructor(protected videoConnector: VideoConnector, protected chatConnection: ChatConnection) {
         this.stateSubj = new BehaviorSubject(null);
         this.state$ = this.stateSubj.pipe(filter(s => s !== null));
 
@@ -17,7 +18,7 @@ export class BaseVideoStateService {
     }
 
     protected watch() {
-        this.videoConnection.remoteStream$.subscribe(() => {
+        this.videoConnector.remoteStream$.subscribe(() => {
             switch (this.stateSubj.value) {
                 case 'CONNECTED':
                     this.stateSubj.next('IN_CALL');
@@ -30,7 +31,7 @@ export class BaseVideoStateService {
             this.goTerminating();
         });
 
-        this.signalConnection.terminated$.subscribe(() => {
+        this.videoConnector.terminated$.subscribe(() => {
             switch (this.stateSubj.value) {
                 case 'TERMINATING':
                     this.stateSubj.next('IDLE');

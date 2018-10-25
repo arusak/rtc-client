@@ -4,9 +4,9 @@ export class DoctorVideoStateService extends BaseVideoStateService {
     protected watch() {
         super.watch();
 
-        this.signalConnection.opened$.subscribe(() => {
-            this.goConnected();
-        });
+        // this.signalConnection.opened$.subscribe(() => {
+        //     this.goConnected();
+        // });
     }
 
     callButtonClicked() {

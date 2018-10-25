@@ -11,7 +11,6 @@ export class DoctorView extends BaseView {
 
     constructor(videoConnector: VideoConnector, chatConnection: ChatConnection) {
         super(videoConnector, chatConnection);
-        this.VideoStateServiceClass = DoctorVideoStateService;
     }
 
     render(root: HTMLElement) {

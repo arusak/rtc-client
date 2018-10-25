@@ -9,7 +9,6 @@ import {ajax, AjaxResponse} from 'rxjs/ajax';
 export abstract class BaseVideoConnector implements VideoConnector {
     remoteStream$: Observable<MediaStream>;
     localStream$: Observable<MediaStream>;
-    //
     terminated$: Observable<any>;
 
     protected localStreamSubj: Subject<MediaStream>;

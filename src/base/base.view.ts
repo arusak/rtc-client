@@ -10,9 +10,6 @@ export abstract class BaseView {
     protected localVideo: HTMLMediaElement;
     protected hangupButton: HTMLButtonElement;
 
-    protected stateService: BaseVideoStateService;
-    protected VideoStateServiceClass: new(videoConnection: VideoConnection, chatConnection: ChatConnection, signalConnection: SignalConnection) => VideoStateService;
-
     private videoContainer: HTMLDivElement;
 
     constructor(protected videoConnector: VideoConnector, protected chatConnection: ChatConnection) {
