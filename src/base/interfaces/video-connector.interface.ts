@@ -4,6 +4,7 @@ export interface VideoConnector {
     remoteStream$: Observable<MediaStream>;
     localStream$: Observable<MediaStream>;
     terminated$: Observable<any>;
+    started$: Observable<any>;
 
     /**
      * Позвонить

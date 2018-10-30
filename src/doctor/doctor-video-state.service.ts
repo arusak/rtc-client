@@ -4,17 +4,17 @@ export class DoctorVideoStateService extends BaseVideoStateService {
     protected watch() {
         super.watch();
 
-        // this.signalConnection.opened$.subscribe(() => {
-        //     this.goConnected();
-        // });
-    }
+        // пациент принимает вызов
+        this.chatConnection.accepted$.subscribe(() => this.goInCall());
 
-    callButtonClicked() {
-        this.goRinging();
-    }
+        // при открытии сигнального канала считаем что вызов начался
+        this.videoConnector.started$.subscribe(() => {
+            this.goConnected();
+        });
 
-    cancelButtonClicked() {
-        this.goTerminating();
+        // в чат приходит сигнал об окончании сеанса связи
+        this.chatConnection.ended$.subscribe(() => {
+            this.goTerminating();
+        });
     }
-
 }

@@ -7,6 +7,7 @@ import * as moment from 'moment';
 export class ChatConnection {
     call$: Observable<any>;
     ended$: Observable<any>;
+    error$: Observable<any>;
     accepted$: Observable<any>;
 
     private socketConnection: WebSocketConnection;
@@ -33,6 +34,7 @@ export class ChatConnection {
 
         this.call$ = data$.pipe(filter(msg => msg.type === 'VIDEO_CALL_STARTED'));
         this.ended$ = data$.pipe(filter(msg => ['VIDEO_CALL_CANCELLED', 'VIDEO_CALL_IGNORED', 'VIDEO_CALL_DECLINED', 'VIDEO_CALL_ENDED'].includes(msg.type)));
+        this.error$ = data$.pipe(filter(msg => ['VIDEO_CALL_ERROR'].includes(msg.type)));
         this.accepted$ = data$.pipe(filter(msg => ['VIDEO_CALL_ACCEPTED'].includes(msg.type)));
     }
 

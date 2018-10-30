@@ -12,9 +12,10 @@ export class PatientVideoConnector extends BaseVideoConnector {
     decline() {
         this.signalSocket = new SignalConnection(this.signalSocketId);
         this.signalSocket.opened$.subscribe(() => {
+            this.log('Hanging up signal connection');
             this.signalSocket.hangup();
             this.signalSocket.close();
+            this.terminatedSubj.next();
         });
     }
-
 }

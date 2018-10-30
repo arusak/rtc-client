@@ -6,7 +6,7 @@ import {AuthParameters} from './interfaces/auth-parameters.interface';
 import {VideoStateService} from './interfaces/video-state-service.interface';
 
 export abstract class BaseApp {
-    protected ViewClass: new(videoConnector: VideoConnector, chatConnection: ChatConnection) => View;
+    protected ViewClass: new(videoConnector: VideoConnector, videoStateService: VideoStateService) => View;
     protected VideoConnectorClass: new(videoSocketId: string, chatConnection: ChatConnection) => VideoConnector;
     protected VideoStateServiceClass: new(videoConnector: VideoConnector, chatConnection: ChatConnection) => VideoStateService;
 
@@ -28,7 +28,6 @@ export abstract class BaseApp {
     private appointmentIdInput: HTMLInputElement;
     private usernameInput: HTMLInputElement;
     private passwordInput: HTMLInputElement;
-
 
     private session: LoginSession;
     private chatConnection: ChatConnection;
@@ -152,7 +151,7 @@ export abstract class BaseApp {
     };
 
     private renderView() {
-        this.view = new this.ViewClass(this.videoConnector, this.chatConnection);
+        this.view = new this.ViewClass(this.videoConnector, this.videoStateService);
         this.view.render(this.rootElement);
     };
 

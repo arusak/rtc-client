@@ -1,8 +1,8 @@
-import {from, Observable, Subject} from 'rxjs';
+import {from, merge, Observable, Subject} from 'rxjs';
 import {VideoConnection} from '../shared/video.connection';
 import {SignalConnection} from '../shared/signal.connection';
 import {VideoConnector} from './interfaces/video-connector.interface';
-import {flatMap, map, take} from 'rxjs/operators';
+import {flatMap, map, take, tap} from 'rxjs/operators';
 import {ChatConnection} from '../shared/chat.connection';
 import {ajax, AjaxResponse} from 'rxjs/ajax';
 
@@ -10,10 +10,12 @@ export abstract class BaseVideoConnector implements VideoConnector {
     remoteStream$: Observable<MediaStream>;
     localStream$: Observable<MediaStream>;
     terminated$: Observable<any>;
+    started$: Observable<any>;
 
     protected localStreamSubj: Subject<MediaStream>;
     protected remoteStreamSubj: Subject<MediaStream>;
-    protected terminatedSubj: Subject<MediaStream>;
+    protected terminatedSubj: Subject<any>;
+    protected startedSubj: Subject<any>;
 
     protected videoConnection: VideoConnection;
     protected signalSocket: SignalConnection;
@@ -27,8 +29,10 @@ export abstract class BaseVideoConnector implements VideoConnector {
         this.localStream$ = this.localStreamSubj.asObservable();
         this.remoteStreamSubj = new Subject<MediaStream>();
         this.remoteStream$ = this.remoteStreamSubj.asObservable();
-        this.terminatedSubj = new Subject<MediaStream>();
+        this.terminatedSubj = new Subject<any>();
         this.terminated$ = this.terminatedSubj.asObservable();
+        this.startedSubj = new Subject<any>();
+        this.started$ = this.startedSubj.asObservable();
     }
 
     accept(): void {
@@ -58,6 +62,7 @@ export abstract class BaseVideoConnector implements VideoConnector {
     // todo убрать спагетти, разнести получение медиа и создание видео-соединения
     protected initializeConnection(passive?: boolean) {
         this.initializeSignalSocket();
+        this.setupChatWatch();
 
         this.log('Requesting access to devices');
         from(navigator.mediaDevices.getUserMedia({video: true, audio: true}))
@@ -76,7 +81,18 @@ export abstract class BaseVideoConnector implements VideoConnector {
                 this.log('Got a remote stream');
                 this.remoteStreamSubj.next(remoteStream);
             });
+    }
 
+    protected setupChatWatch() {
+        // When video call ends, close everything
+        merge(this.chatConnection.ended$, this.chatConnection.error$)
+            .pipe(take(1))
+            .subscribe(() => {
+                this.log('Closing connections');
+                this.signalSocket.close();
+                this.videoConnection.close();
+                this.terminatedSubj.next();
+            });
     }
 
     protected log(...messages) {
@@ -88,18 +104,13 @@ export abstract class BaseVideoConnector implements VideoConnector {
         this.log('Initializing a signal socket');
         this.signalSocket = new SignalConnection(this.signalSocketId);
 
-        // When video call ends, close everything
-        this.chatConnection.ended$
-            .pipe(take(1))
-            .subscribe(() => {
-                this.log('Closing connections');
-                this.signalSocket.close();
-                this.videoConnection.close();
-                this.terminatedSubj.next();
-            });
-
+        // при открытии сигнального сокета сигнализируем об успешном подключении
+        // и подписываемся на сообщения об ошибках
         this.signalSocket.opened$
-            .pipe(flatMap(() => this.signalSocket.error$))
+            .pipe(
+                tap(() => this.startedSubj.next()),
+                flatMap(() => this.signalSocket.error$),
+            )
             .subscribe(console.error);
     }
 
