@@ -59,27 +59,31 @@ export abstract class BaseVideoConnector implements VideoConnector {
      * Получить доступ к медиа-устройствам, создать соединение с сигнальным каналом и каналом данных
      * @param {boolean} passive пассивный режим: ожидать оффера, не посылая сообщение call
      */
-    // todo убрать спагетти, разнести получение медиа и создание видео-соединения
     protected initializeConnection(passive?: boolean) {
         this.initializeSignalSocket();
         this.setupChatWatch();
 
+        this.localStream$.pipe(
+            take(1),
+            flatMap((localStream: MediaStream) => {
+                this.log('Creating a new video connection');
+                this.videoConnection = new VideoConnection(localStream, this.signalSocket, this.rtcConfig);
+                if (!passive) this.sendCall();
+                this.log('Waiting for remote stream');
+                return this.videoConnection.remoteStream$;
+            }),
+        ).subscribe(remoteStream => {
+            this.log('Got a remote stream');
+            this.remoteStreamSubj.next(remoteStream);
+        });
+
         this.log('Requesting access to devices');
-        from(navigator.mediaDevices.getUserMedia({video: true, audio: true}))
-            .pipe(
-                flatMap((localStream: MediaStream) => {
-                    this.localStreamSubj.next(localStream);
-                    this.log('Got access. Got local stream. Creating a new video connection');
-                    this.videoConnection = new VideoConnection(localStream, this.signalSocket, this.rtcConfig);
-                    if (!passive) this.sendCall();
-                    this.log('Waiting for remote stream');
-                    return this.videoConnection.remoteStream$;
-                }),
-                take(1)
-            )
-            .subscribe(remoteStream => {
-                this.log('Got a remote stream');
-                this.remoteStreamSubj.next(remoteStream);
+        navigator.mediaDevices.getUserMedia({video: true, audio: true})
+            .catch(err => {
+                this.log('Error accessing devices.', err);
+            })
+            .then((localStream: MediaStream) => {
+                this.localStreamSubj.next(localStream);
             });
     }
 

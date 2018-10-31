@@ -1,7 +1,8 @@
-import {BehaviorSubject, from, Observable} from 'rxjs';
+import {BehaviorSubject, from, fromEvent, merge, Observable} from 'rxjs';
 import {SignalConnection} from './signal.connection';
 import {SignalMessage} from './models/webrtc-signal-message.model';
-import {filter, flatMap, mapTo} from 'rxjs/operators';
+import {buffer, filter, flatMap, mapTo} from 'rxjs/operators';
+import {skipUntil, take} from 'rxjs/internal/operators';
 
 export class VideoConnection {
     remoteStream$: Observable<MediaStream>;
@@ -24,11 +25,36 @@ export class VideoConnection {
         signalSocket.opened$.subscribe(() => this.open())
     }
 
-    // todo разбить на более короткие
     private open() {
         this.log('Creating new RTC connection');
         this.pc = new RTCPeerConnection(this.rtcConfig);
 
+        this.setupStateLogging();
+        this.setupSendingOfLocalCandidates();
+        this.setupListeningForRemoteCandidates();
+        this.setupListeningForRemoteStream();
+        this.setupOfferProcessing();
+
+        this.addLocalTracksToRtcPeerConnection();
+    }
+
+    close() {
+        if (this.pc) {
+            this.pc.close();
+            this.pc = undefined;
+        }
+        this.remoteStreamSubj.complete();
+        this.remoteStreamSubj = null;
+
+        this.localStream.getTracks().forEach(t => t.stop());
+        this.localStream = null;
+        this.localVideoTrack = null;
+        this.localAudioTrack = null;
+        this.videoSender = null;
+        this.audioSender = null;
+    }
+
+    private addLocalTracksToRtcPeerConnection() {
         if (this.localVideoTrack) {
             this.log('Adding local video track to RTC connection');
             this.videoSender = this.pc.addTrack(this.localVideoTrack, this.localStream);
@@ -38,7 +64,9 @@ export class VideoConnection {
             this.log('Adding local audio track to RTC connection');
             this.audioSender = this.pc.addTrack(this.localAudioTrack, this.localStream);
         }
+    }
 
+    private setupListeningForRemoteStream() {
         this.log('Listening to `track` event');
         this.pc.addEventListener('track', (evt: RTCTrackEvent) => {
             let remoteStream = evt.streams[0];
@@ -49,6 +77,38 @@ export class VideoConnection {
             }
         });
 
+    }
+
+    private setupListeningForRemoteCandidates() {
+        this.log('Waiting for remote candidates');
+
+        // watching for peerConnection to get ready for candidates
+        let release$ = fromEvent(this.pc, 'signalingstatechange')
+            .pipe(filter(() => this.pc.signalingState === 'have-remote-offer'), take(1));
+
+        // until peerConnection is ready, buffer incoming candidates
+        merge(
+            this.signalSocket.candidate$.pipe(buffer(release$), flatMap((buffer: SignalMessage[]) => from(buffer))),
+            this.signalSocket.candidate$.pipe(skipUntil(release$))
+        ).subscribe((msg: SignalMessage) => {
+            this.log('Got a remote candidate');
+
+            let candidate: RTCIceCandidate;
+            try {
+                candidate = new RTCIceCandidate(JSON.parse(msg.sdp));
+            } catch (err) {
+                this.log('Error ICE candidate from SDP');
+            }
+
+            if (candidate) {
+                this.pc.addIceCandidate(candidate)
+                    .then(() => this.log('Remote candidate added successfully'))
+                    .catch(err => this.log('Error while processing a remote candidate', err));
+            }
+        });
+    }
+
+    private setupSendingOfLocalCandidates() {
         this.log('Listening to `icecandidate` event');
         this.pc.addEventListener('icecandidate', (evt: RTCPeerConnectionIceEvent) => {
             if (evt.candidate) {
@@ -56,35 +116,9 @@ export class VideoConnection {
                 this.signalSocket.sendCandidate(evt.candidate);
             }
         });
+    }
 
-        this.pc.addEventListener('icegatheringstatechange', (evt: Event) => {
-            this.log('Gathering of candidates: ' + (this.pc && this.pc.iceGatheringState));
-        });
-
-        this.pc.addEventListener('iceconnectionstatechange', (evt: Event) => {
-            this.log('ICE connection state: ' + (this.pc && this.pc.iceConnectionState));
-        });
-
-        this.pc.addEventListener('negotiationneeded', () => {
-            this.log('Negotiation needed. Doing nothing.');
-        });
-
-        this.log('Waiting for remote candidates');
-        this.signalSocket.candidate$.subscribe(msg => {
-            this.log('Got a remote candidate');
-            // this.log('Remote desc:', this.pc && this.pc.remoteDescription && this.pc.remoteDescription.type);
-
-            let candidate: RTCIceCandidate = new RTCIceCandidate(JSON.parse(msg.sdp));
-            this.pc.addIceCandidate(candidate)
-                .then(() => this.log('Remote candidate added successfully'))
-                .catch(err => this.log('Error while processing a remote candidate', err));
-
-            // todo observable - копилка кандидатов, которая открывается, когда соединение готово (обработан офер)
-            // todo не забыть добавить и те, что пришли после готовности офера
-            // предусмотрим случай, когда кандидаты пришли до того, как соединение готово их добавить
-            // if (this.pc && this.pc.remoteDescription && this.pc.remoteDescription.type) {
-        });
-
+    private setupOfferProcessing() {
         this.log('Waiting for offer');
         this.signalSocket.offer$.pipe(
             flatMap((msg: SignalMessage) => {
@@ -111,24 +145,22 @@ export class VideoConnection {
         );
     }
 
-    close() {
-        if (this.pc) {
-            this.pc.close();
-            this.pc = undefined;
-        }
-        this.remoteStreamSubj.complete();
-        this.remoteStreamSubj = null;
+    private setupStateLogging() {
+        this.pc.addEventListener('icegatheringstatechange', () => {
+            this.log('Gathering of candidates: ' + (this.pc && this.pc.iceGatheringState));
+        });
 
-        this.localStream.getTracks().forEach(t => t.stop());
-        this.localStream = null;
-        this.localVideoTrack = null;
-        this.localAudioTrack = null;
-        this.videoSender = null;
-        this.audioSender = null;
+        this.pc.addEventListener('iceconnectionstatechange', () => {
+            this.log('ICE connection state: ' + (this.pc && this.pc.iceConnectionState));
+        });
 
-        setTimeout(() => {
-            console.log(this.audioSender, this.videoSender, this.localAudioTrack, this.localVideoTrack, this.localStream);
-        }, 1000);
+        // somehow addEventListener doesn't work in Chrome
+        this.pc.onsignalingstatechange = () => this.log('Signaling state: ' + (this.pc && this.pc.signalingState));
+
+        this.pc.addEventListener('negotiationneeded', () => {
+            this.log('Negotiation needed. Doing nothing.');
+        });
+
     }
 
     private log(...messages) {
