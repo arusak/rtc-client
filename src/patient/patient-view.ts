@@ -9,14 +9,14 @@ export class PatientView extends BaseView {
         this.acceptButton = document.createElement('button');
         this.acceptButton.innerText = 'Accept';
         this.acceptButton.addEventListener('click', () => {
-            this.videoConnector.accept();
+            this.videoConnection.accept();
             this.videoStateService.acceptButtonClicked();
         });
 
         this.declineButton = document.createElement('button');
         this.declineButton.innerText = 'Decline';
         this.declineButton.addEventListener('click', () => {
-            this.videoConnector.decline();
+            this.videoConnection.decline();
             this.videoStateService.declineButtonClicked();
         });
 

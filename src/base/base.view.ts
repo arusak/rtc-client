@@ -1,5 +1,5 @@
-import {VideoConnector} from './interfaces/video-connector.interface';
 import {VideoStateService} from './interfaces/video-state-service.interface';
+import {VideoConnection} from '../shared/video.connection';
 
 export abstract class BaseView {
     protected remoteVideo: HTMLMediaElement;
@@ -9,7 +9,7 @@ export abstract class BaseView {
     private videoContainer: HTMLDivElement;
     private state: HTMLTextAreaElement;
 
-    constructor(protected videoConnector: VideoConnector,
+    constructor(protected videoConnection: VideoConnection,
                 protected videoStateService: VideoStateService) {
         this.subscribeToStreams();
     }
@@ -34,7 +34,7 @@ export abstract class BaseView {
         this.hangupButton.innerText = 'Hang up';
         this.disable(this.hangupButton);
         this.hangupButton.addEventListener('click', () => {
-            this.videoConnector.hangup();
+            this.videoConnection.hangup();
         });
         this.videoContainer.appendChild(this.hangupButton);
 
@@ -51,23 +51,23 @@ export abstract class BaseView {
     }
 
     protected subscribeToStreams() {
-        if (!this.videoConnector) {
+        if (!this.videoConnection) {
             throw new Error('Unable to initialize View. Video connector is not ready');
         }
 
-        this.videoConnector.remoteStream$.subscribe(stream => {
+        this.videoConnection.remoteStream$.subscribe(stream => {
             this.log('Starting remote video');
             this.remoteVideo.srcObject = stream;
             this.remoteVideo.play().catch(console.error);
         });
 
-        this.videoConnector.localStream$.subscribe(stream => {
+        this.videoConnection.localStream$.subscribe(stream => {
             this.log('Starting local video');
             this.localVideo.srcObject = stream;
             this.localVideo.play().catch(console.error);
         });
 
-        this.videoConnector.terminated$.subscribe(() => this.stopVideos());
+        this.videoConnection.terminated$.subscribe(() => this.stopVideos());
 
         this.videoStateService.state$.subscribe(state => {
             if (this.state) this.state.value += state + '\n';

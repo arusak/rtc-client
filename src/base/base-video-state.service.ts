@@ -2,13 +2,13 @@ import {ChatConnection} from '../shared/chat.connection';
 import {BehaviorSubject, Observable} from 'rxjs';
 import {filter} from 'rxjs/operators';
 import {VideoState, VideoStateService} from './interfaces/video-state-service.interface';
-import {VideoConnector} from './interfaces/video-connector.interface';
+import {VideoConnection} from '../shared/video.connection';
 
 export class BaseVideoStateService implements VideoStateService {
     state$: Observable<VideoState>;
     protected stateSubj: BehaviorSubject<VideoState>;
 
-    constructor(protected videoConnector: VideoConnector, protected chatConnection: ChatConnection) {
+    constructor(protected videoConnection: VideoConnection, protected chatConnection: ChatConnection) {
         this.stateSubj = new BehaviorSubject(<VideoState>'IDLE');
         this.state$ = this.stateSubj.pipe(filter(s => s !== null));
 
@@ -37,7 +37,7 @@ export class BaseVideoStateService implements VideoStateService {
 
     protected watch() {
         // разорвано подключение
-        this.videoConnector.terminated$.subscribe(() => {
+        this.videoConnection.terminated$.subscribe(() => {
             this.stateSubj.next('IDLE');
         });
     }

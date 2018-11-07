@@ -1,18 +1,19 @@
-import {VideoConnector} from './interfaces/video-connector.interface';
 import {View} from './interfaces/view.interface';
 import {LoginSession} from '../shared/login-session';
 import {ChatConnection} from '../shared/chat.connection';
 import {AuthParameters} from './interfaces/auth-parameters.interface';
 import {VideoStateService} from './interfaces/video-state-service.interface';
+import {VideoConnection} from '../shared/video.connection';
+import {ConfigService} from '../shared/config.service';
 
 export abstract class BaseApp {
-    protected ViewClass: new(videoConnector: VideoConnector, videoStateService: VideoStateService) => View;
-    protected VideoConnectorClass: new(videoSocketId: string, chatConnection: ChatConnection) => VideoConnector;
-    protected VideoStateServiceClass: new(videoConnector: VideoConnector, chatConnection: ChatConnection) => VideoStateService;
+    protected ViewClass: new(videoConnection: VideoConnection, videoStateService: VideoStateService) => View;
+    protected VideoStateServiceClass: new(videoConnector: VideoConnection, chatConnection: ChatConnection) => VideoStateService;
 
-    protected videoConnector: VideoConnector;
+    protected videoConnection: VideoConnection;
     protected view: View;
     protected videoStateService: VideoStateService;
+    protected config: ConfigService;
 
     protected authParameters: AuthParameters;
 
@@ -43,6 +44,8 @@ export abstract class BaseApp {
         if (appointmentId) {
             this.appointmentIdInput.value = appointmentId;
         }
+
+        this.config = new ConfigService();
 
         this.loginForm = document.querySelector('.login-form');
         this.usernameInput = document.querySelector('[name=username]');
@@ -144,14 +147,14 @@ export abstract class BaseApp {
                     let videoSocketId = appointment.videoSession.id;
                     let chatSocketId = appointment.chatSession.id;
                     this.chatConnection = new ChatConnection(chatSocketId);
-                    this.videoConnector = new this.VideoConnectorClass(videoSocketId, this.chatConnection);
-                    this.videoStateService = new this.VideoStateServiceClass(this.videoConnector, this.chatConnection)
+                    this.videoConnection = new VideoConnection(this.chatConnection, videoSocketId, this.config);
+                    this.videoStateService = new this.VideoStateServiceClass(this.videoConnection, this.chatConnection)
                 }
             });
     };
 
     private renderView() {
-        this.view = new this.ViewClass(this.videoConnector, this.videoStateService);
+        this.view = new this.ViewClass(this.videoConnection, this.videoStateService);
         this.view.render(this.rootElement);
     };
 

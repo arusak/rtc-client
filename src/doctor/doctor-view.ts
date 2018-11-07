@@ -10,7 +10,7 @@ export class DoctorView extends BaseView {
         this.callButton.innerText = 'Call';
         this.callButton.addEventListener('click', () => {
             this.videoStateService.callButtonClicked();
-            this.videoConnector.call();
+            this.videoConnection.call();
             this.enable(this.cancelButton);
         });
 
@@ -19,7 +19,7 @@ export class DoctorView extends BaseView {
         this.disable(this.cancelButton);
         this.cancelButton.addEventListener('click', () => {
             this.videoStateService.cancelButtonClicked();
-            this.videoConnector.cancel();
+            this.videoConnection.cancel();
         });
 
         this.dialog = document.createElement('div');

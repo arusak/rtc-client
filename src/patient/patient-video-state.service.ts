@@ -5,7 +5,7 @@ export class PatientVideoStateService extends BaseVideoStateService {
         super.watch();
 
         // в соединение приходит удалённый поток
-        this.videoConnector.remoteStream$.subscribe(() => this.goInCall());
+        this.videoConnection.remoteStream$.subscribe(() => this.goInCall());
 
         this.chatConnection.call$.subscribe(() => {
             this.goRinging()

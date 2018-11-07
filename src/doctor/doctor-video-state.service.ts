@@ -8,7 +8,7 @@ export class DoctorVideoStateService extends BaseVideoStateService {
         this.chatConnection.accepted$.subscribe(() => this.goInCall());
 
         // при открытии сигнального канала считаем что вызов начался
-        this.videoConnector.started$.subscribe(() => {
+        this.videoConnection.connected$.subscribe(() => {
             this.goConnected();
         });
 
